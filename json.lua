@@ -125,6 +125,12 @@ local delim_chars   = create_set(" ", "\t", "\r", "\n", "]", "}", ",")
 local escape_chars  = create_set("\\", "/", '"', "b", "f", "n", "r", "t", "u")
 local keywords      = create_set("true", "false", "null")
 
+local keyword_map = {
+  [ "true"  ] = true,
+  [ "false" ] = false,
+  [ "null"  ] = nil,
+}
+
 
 local function next_char(str, idx, set, negate)
   for i = idx, #str do
@@ -216,7 +222,7 @@ local function parse_keyword(str, i, chr)
   if not keywords[word] then
     decode_error(str, i, "invalid keyword '" .. word .. "'")
   end
-  return (chr == "t") and true or (chr == "f") and false, x
+  return keyword_map[word], x
 end
 
 
