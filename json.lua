@@ -13,7 +13,6 @@ local json = { _version = "0.0.0" }
 -- Encode
 -------------------------------------------------------------------------------
 
-local loadstring = loadstring or load
 local encode
 
 local escape_char_map = {
@@ -25,6 +24,12 @@ local escape_char_map = {
   [ "\r" ] = "\\r",
   [ "\t" ] = "\\t",
 }
+
+local escape_char_map_inv = {}
+for k, v in pairs(escape_char_map) do
+  escape_char_map_inv[v] = k
+end
+
 
 local function escape_char(c)
   return escape_char_map[c] or string.format("\\u%04x", c:byte())
@@ -169,6 +174,7 @@ end
 
 local function parse_string(str, i, chr)
   local has_unicode_escape = false
+  local has_escape = false
   local last
   for j = i + 1, #str do
     local x = str:sub(j, j)
@@ -187,17 +193,22 @@ local function parse_string(str, i, chr)
           decode_error(str, j, "unsupported utf-16 surrogate pair in string")
         end
         has_unicode_escape = true
+      else
+        has_escape = true
       end
       if not escape_chars[x] then
         decode_error(str, j, "invalid escape char '" .. x .. "' in string")
       end
 
     elseif x == '"' then
-      local s = str:sub(i, j)
+      local s = str:sub(i + 1, j - 1)
       if has_unicode_escape then 
         s = s:gsub("\\u....", parse_unicode_escape)
       end
-      return loadstring( "return " .. s )(), j + 1
+      if has_escape then
+        s = s:gsub("\\.", escape_char_map_inv)
+      end
+      return s, j + 1
     end
     last = x
   end
