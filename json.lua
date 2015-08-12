@@ -161,19 +161,37 @@ local function decode_error(str, idx, msg)
 end
 
 
-local function parse_unicode_escape(s)
-  local n = tonumber( s:sub(3), 16 )
+local function codepoint_to_utf8(n)
+  -- http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=iws-appendixa
   if n <= 0x7f then
     return string.char(n)
   elseif n <= 0x7ff then
     return string.char(n / 64 + 192, n % 64 + 128)
+  elseif n <= 0xffff then
+    return string.char(n / 4096 + 224, n % 4096 / 64 + 128, n % 64 + 128)
+  elseif n <= 0x10ffff then
+    return string.char(n / 262144 + 240, n % 262144 / 4096 + 128,
+                       n % 4096 / 64 + 128, n % 64 + 128)
   end
-  return string.char(n / 4096 + 224, n % 4096 / 64 + 128, n % 64 + 128)
+  error( string.format("invalid unicode codepoint '%x'", n) )
+end
+
+
+local function parse_unicode_escape(s)
+  local n1 = tonumber( s:sub(3, 6),  16 )
+  local n2 = tonumber( s:sub(9, 12), 16 )
+  -- Surrogate pair?
+  if n2 then
+    return codepoint_to_utf8((n1 - 0xd800) * 0x400 + (n2 - 0xdc00) + 0x10000)
+  else
+    return codepoint_to_utf8(n1)
+  end
 end
 
 
 local function parse_string(str, i, chr)
   local has_unicode_escape = false
+  local has_surrogate_escape = false
   local has_escape = false
   local last
   for j = i + 1, #str do
@@ -190,9 +208,10 @@ local function parse_string(str, i, chr)
           decode_error(str, j, "invalid unicode escape in string")
         end
         if hex:find("^[dD][89aAbB]") then
-          decode_error(str, j, "unsupported utf-16 surrogate pair in string")
+          has_surrogate_escape = true
+        else
+          has_unicode_escape = true
         end
-        has_unicode_escape = true
       else
         has_escape = true
       end
@@ -202,6 +221,9 @@ local function parse_string(str, i, chr)
 
     elseif x == '"' then
       local s = str:sub(i + 1, j - 1)
+      if has_surrogate_escape then 
+        s = s:gsub("\\u[dD][89aAbB]..\\u....", parse_unicode_escape)
+      end
       if has_unicode_escape then 
         s = s:gsub("\\u....", parse_unicode_escape)
       end
