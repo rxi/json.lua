@@ -4,7 +4,7 @@ A minimal JSON library for Lua
 
 ## Features
 * Pure Lua implementation
-* Tiny: around 250sloc, 7kb
+* Tiny: around 270sloc, 8kb
 * Proper error messages, *eg:* `expected '}' or ',' at line 203 col 30`
 
 
@@ -29,7 +29,6 @@ json.decode('[1,2,3,{"x":10}]') -- Returns { 1, 2, 3, { x = 10 } }
 ```
 
 ## Notes
-* UTF-16 surrogate pairs are not supported
 * Tables with the key `1` set are treated as arrays when encoding
 * `null` values contained within an array or object are converted to `nil` and
   are therefore lost upon decoding
