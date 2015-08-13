@@ -1,5 +1,5 @@
 # ![json.lua](https://cloud.githubusercontent.com/assets/3920290/9207222/24413cbe-4064-11e5-874e-7e2deeb5f8cb.png)  
-A minimal JSON library for Lua
+A lightweight JSON library for Lua
 
 
 ## Features
