@@ -335,7 +335,6 @@ local char_func_map = {
   [ "7" ] = parse_number,
   [ "8" ] = parse_number,
   [ "9" ] = parse_number,
-  [ "." ] = parse_number,
   [ "-" ] = parse_number,
   [ "t" ] = parse_keyword,
   [ "f" ] = parse_keyword,
