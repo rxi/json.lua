@@ -298,6 +298,9 @@ local function parse_object(str, i, chr)
       break
     end
     -- Read key
+    if str:sub(i, i) ~= '"' then
+      decode_error(str, i, "expected string for key")
+    end
     key, i = parse(str, i)
     -- Read ':' delimiter
     i = next_char(str, i, space_chars, true)
