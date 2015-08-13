@@ -97,8 +97,10 @@ test("strict decode", function()
     "{'x' : 1}",
     '{"x" : nil}',
     '{"x" : 0x10}',
+    '{"x" : 001}',
+    '{"x" : .1}',
     '{"x" : 1, }',
-    '[1, 2, 3, ]'
+    '[1, 2, 3, ]',
   }
   for i, v in ipairs(t) do
     local status = pcall(json.decode, v)
