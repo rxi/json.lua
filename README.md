@@ -1,9 +1,11 @@
-# ![json.lua](https://cloud.githubusercontent.com/assets/3920290/9207222/24413cbe-4064-11e5-874e-7e2deeb5f8cb.png)  
+# ![json.lua](https://cloud.githubusercontent.com/assets/3920290/9281532/99e5e0cc-42bd-11e5-8fce-eaff2f7fc681.png)  
 A lightweight JSON library for Lua
 
 
 ## Features
-* Pure Lua implementation
+* Implemented in pure Lua: works with 5.1, 5.2, 5.3 and JIT
+* Fast: generally outperforms other pure Lua JSON implementations
+  ([benchmark scripts](bench/))
 * Tiny: around 270sloc, 8kb
 * Proper error messages, *eg:* `expected '}' or ',' at line 203 col 30`
 
