@@ -36,6 +36,15 @@ local text = "[" .. string.rep([[{
 }, ]], 1000):sub(1, -3) .. "]"
 
 
+-- As this is meant to be a pure Lua benchmark, we remove the ability to
+-- require 'lpeg' so dkjson doesn't use it for parsing. (Incidentally json.lua
+-- seems to outperform libraries which use lpeg when both are using LuaJIT)
+local _require = require
+require = function(modname)
+  if modname == "lpeg" then error() end
+  return _require(modname)
+end
+
 -- Run benchmarks, store results
 local results = {}
 
@@ -46,7 +55,7 @@ for i, name in ipairs(libs) do
   end
   local json = f()
 
-  -- Handle special cases
+  -- Remap functions to work for jfjson.lua
   if name == "jfjson.lua" then
     local _encode, _decode = json.encode, json.decode
     json.encode = function(...) return _encode(json, ...) end
