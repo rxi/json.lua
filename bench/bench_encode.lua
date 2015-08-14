@@ -50,6 +50,9 @@ for i, name in ipairs(libs) do
     json.decode = function(...) return _decode(json, ...) end
   end
 
+  -- Warmup (for LuaJIT)
+  bench.run(name, 1, function() json.encode(data) end)
+
   -- Run and push results
   local res = bench.run(name, 10, function() json.encode(data) end)
   table.insert(results, res)
