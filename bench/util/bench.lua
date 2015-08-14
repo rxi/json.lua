@@ -13,7 +13,7 @@ function bench.run(name, count, func)
     table.insert(res, (os.clock() - start_time))
   end
   -- Calculate average
-    local avg = 0
+  local avg = 0
   for i, v in ipairs(res) do
     avg = avg + v
   end
