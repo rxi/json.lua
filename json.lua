@@ -349,9 +349,8 @@ parse = function(str, idx)
   local f = char_func_map[chr]
   if f then
     return f(str, idx, chr)
-  else
-    decode_error(str, idx, "unexpected character '" .. chr .. "'")
   end
+  decode_error(str, idx, "unexpected character '" .. chr .. "'")
 end
 
 
