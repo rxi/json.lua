@@ -194,7 +194,7 @@ test("encode invalid", function()
   }
   for i, v in ipairs(t) do
     local status, res = pcall(json.encode, v)
-    assert( not status, fmt("encoding '%s' did not result in an error", v) )
+    assert( not status, fmt("encoding idx %d did not result in an error", i) )
   end
 end)
 
