@@ -163,15 +163,16 @@ end
 
 local function codepoint_to_utf8(n)
   -- http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=iws-appendixa
+  local f = math.floor
   if n <= 0x7f then
     return string.char(n)
   elseif n <= 0x7ff then
-    return string.char(n / 64 + 192, n % 64 + 128)
+    return string.char(f(n / 64) + 192, n % 64 + 128)
   elseif n <= 0xffff then
-    return string.char(n / 4096 + 224, n % 4096 / 64 + 128, n % 64 + 128)
+    return string.char(f(n / 4096) + 224, f(n % 4096 / 64) + 128, n % 64 + 128)
   elseif n <= 0x10ffff then
-    return string.char(n / 262144 + 240, n % 262144 / 4096 + 128,
-                       n % 4096 / 64 + 128, n % 64 + 128)
+    return string.char(f(n / 262144) + 240, f(n % 262144 / 4096) + 128,
+                       f(n % 4096 / 64) + 128, n % 64 + 128)
   end
   error( string.format("invalid unicode codepoint '%x'", n) )
 end
