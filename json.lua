@@ -198,11 +198,10 @@ local function parse_string(str, i, chr)
   for j = i + 1, #str do
     local x = str:sub(j, j)
 
-    if x == "\n" then
-      decode_error(str, j, "unexpected new line in string")
-    end
+    if x:byte() < 32 then
+      decode_error(str, j, "control character in string")
 
-    if last == "\\" then
+    elseif last == "\\" then
       if x == "u" then 
         local hex = str:sub(j + 1, j + 5)
         if not hex:find("%x%x%x%x") then

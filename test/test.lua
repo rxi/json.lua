@@ -133,12 +133,14 @@ test("decode invalid", function()
 end)
 
 
-test("decode invalid escape", function()
+test("decode invalid string", function()
   local t = {
     [["\z"]],
     [["\1"]],
     [["\u000z"]],
-    [["\ud83d\ude0q"]]
+    [["\ud83d\ude0q"]],
+    '"x\ny"',
+    '"x\0y"',
   }
   for i, v in ipairs(t) do
     local status, err = pcall(json.decode, v)
