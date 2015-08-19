@@ -190,7 +190,7 @@ local function parse_unicode_escape(s)
 end
 
 
-local function parse_string(str, i, chr)
+local function parse_string(str, i)
   local has_unicode_escape = false
   local has_surrogate_escape = false
   local has_escape = false
@@ -243,7 +243,7 @@ local function parse_string(str, i, chr)
 end
 
 
-local function parse_number(str, i, chr)
+local function parse_number(str, i)
   local x = next_char(str, i, delim_chars)
   local s = str:sub(i, x - 1)
   local n = tonumber(s)
@@ -254,7 +254,7 @@ local function parse_number(str, i, chr)
 end
 
 
-local function parse_keyword(str, i, chr)
+local function parse_keyword(str, i)
   local x = next_char(str, i, delim_chars)
   local word = str:sub(i, x - 1)
   if not keywords[word] then
@@ -264,7 +264,7 @@ local function parse_keyword(str, i, chr)
 end
 
 
-local function parse_array(str, i, chr)
+local function parse_array(str, i)
   local res = {}
   local n = 1
   i = i + 1
@@ -282,7 +282,7 @@ local function parse_array(str, i, chr)
     n = n + 1
     -- Next token 
     i = next_char(str, i, space_chars, true)
-    chr = str:sub(i, i)
+    local chr = str:sub(i, i)
     i = i + 1
     if chr == "]" then break end
     if chr ~= "," then decode_error(str, i, "expected ']' or ','") end
@@ -291,7 +291,7 @@ local function parse_array(str, i, chr)
 end
 
 
-local function parse_object(str, i, chr)
+local function parse_object(str, i)
   local res = {}
   i = i + 1
   while 1 do
@@ -319,7 +319,7 @@ local function parse_object(str, i, chr)
     res[key] = val
     -- Next token
     i = next_char(str, i, space_chars, true)
-    chr = str:sub(i, i)
+    local chr = str:sub(i, i)
     i = i + 1
     if chr == "}" then break end
     if chr ~= "," then decode_error(str, i, "expected '}' or ','") end
@@ -353,7 +353,7 @@ parse = function(str, idx)
   local chr = str:sub(idx, idx)
   local f = char_func_map[chr]
   if f then
-    return f(str, idx, chr)
+    return f(str, idx)
   end
   decode_error(str, idx, "unexpected character '" .. chr .. "'")
 end
