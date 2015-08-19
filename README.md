@@ -6,7 +6,7 @@ A lightweight JSON library for Lua
 * Implemented in pure Lua: works with 5.1, 5.2, 5.3 and JIT
 * Fast: generally outperforms other pure Lua JSON implementations
   ([benchmark scripts](bench/))
-* Tiny: around 270sloc, 8kb
+* Tiny: around 280sloc, 8.5kb
 * Proper error messages, *eg:* `expected '}' or ',' at line 203 col 30`
 
 
