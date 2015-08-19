@@ -214,11 +214,12 @@ local function parse_string(str, i, chr)
           has_unicode_escape = true
         end
       else
+        if not escape_chars[x] then
+          decode_error(str, j, "invalid escape char '" .. x .. "' in string")
+        end
         has_escape = true
       end
-      if not escape_chars[x] then
-        decode_error(str, j, "invalid escape char '" .. x .. "' in string")
-      end
+      last = nil
 
     elseif x == '"' then
       local s = str:sub(i + 1, j - 1)
@@ -232,8 +233,10 @@ local function parse_string(str, i, chr)
         s = s:gsub("\\.", escape_char_map_inv)
       end
       return s, j + 1
+    
+    else
+      last = x
     end
-    last = x
   end
   decode_error(str, i, "expected closing quote for string")
 end
