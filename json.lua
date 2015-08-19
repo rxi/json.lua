@@ -196,13 +196,14 @@ local function parse_string(str, i, chr)
   local has_escape = false
   local last
   for j = i + 1, #str do
-    local x = str:sub(j, j)
+    local x = str:byte(j)
 
-    if x:byte() < 32 then
+    if x < 32 then
       decode_error(str, j, "control character in string")
+    end
 
-    elseif last == "\\" then
-      if x == "u" then 
+    if last == 92 then -- "\\" (escape char)
+      if x == 117 then -- "u" (unicode escape sequence)
         local hex = str:sub(j + 1, j + 5)
         if not hex:find("%x%x%x%x") then
           decode_error(str, j, "invalid unicode escape in string")
@@ -213,14 +214,15 @@ local function parse_string(str, i, chr)
           has_unicode_escape = true
         end
       else
-        if not escape_chars[x] then
-          decode_error(str, j, "invalid escape char '" .. x .. "' in string")
+        local c = string.char(x)
+        if not escape_chars[c] then
+          decode_error(str, j, "invalid escape char '" .. c .. "' in string")
         end
         has_escape = true
       end
       last = nil
 
-    elseif x == '"' then
+    elseif x == 34 then -- '"' (end of string)
       local s = str:sub(i + 1, j - 1)
       if has_surrogate_escape then 
         s = s:gsub("\\u[dD][89aAbB]..\\u....", parse_unicode_escape)
