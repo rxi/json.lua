@@ -55,7 +55,7 @@ test("numbers", function()
 end)
 
 
-test("keywords", function()
+test("literals", function()
   assert( json.decode("true") == true )
   assert( json.encode(true) == "true" ) 
   assert( json.decode("false") == false )

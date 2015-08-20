@@ -128,9 +128,9 @@ end
 local space_chars   = create_set(" ", "\t", "\r", "\n")
 local delim_chars   = create_set(" ", "\t", "\r", "\n", "]", "}", ",")
 local escape_chars  = create_set("\\", "/", '"', "b", "f", "n", "r", "t", "u")
-local keywords      = create_set("true", "false", "null")
+local literals      = create_set("true", "false", "null")
 
-local keyword_map = {
+local literal_map = {
   [ "true"  ] = true,
   [ "false" ] = false,
   [ "null"  ] = nil,
@@ -254,13 +254,13 @@ local function parse_number(str, i)
 end
 
 
-local function parse_keyword(str, i)
+local function parse_literal(str, i)
   local x = next_char(str, i, delim_chars)
   local word = str:sub(i, x - 1)
-  if not keywords[word] then
-    decode_error(str, i, "invalid keyword '" .. word .. "'")
+  if not literals[word] then
+    decode_error(str, i, "invalid literal '" .. word .. "'")
   end
-  return keyword_map[word], x
+  return literal_map[word], x
 end
 
 
@@ -341,9 +341,9 @@ local char_func_map = {
   [ "8" ] = parse_number,
   [ "9" ] = parse_number,
   [ "-" ] = parse_number,
-  [ "t" ] = parse_keyword,
-  [ "f" ] = parse_keyword,
-  [ "n" ] = parse_keyword,
+  [ "t" ] = parse_literal,
+  [ "f" ] = parse_literal,
+  [ "n" ] = parse_literal,
   [ "[" ] = parse_array,
   [ "{" ] = parse_object,
 }
