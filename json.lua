@@ -51,7 +51,19 @@ local function encode_table(val, stack)
   stack[val] = true
 
   if val[1] ~= nil then
-    -- Treat as an array
+    -- Treat as array -- check keys are valid and it is not sparse
+    local n = 0
+    for k in pairs(val) do
+      local t = type(k)
+      if t ~= "number" then
+        error("unexpected key of type '" .. t .. "' in array")
+      end
+      n = n + 1
+    end
+    if n ~= #val then
+      error("unexpected sparse array")
+    end
+    -- Encode
     for i, v in ipairs(val) do
       table.insert(res, encode(v, stack))
     end
@@ -63,7 +75,7 @@ local function encode_table(val, stack)
     for k, v in pairs(val) do
       local t = type(k)
       if t ~= "string" then
-        error("expected key of type 'string', got '" .. t .. "'")
+        error("unexpected key of type '" .. t .. "' in object")
       end
       table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
     end
