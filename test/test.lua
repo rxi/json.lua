@@ -156,6 +156,7 @@ test("decode escape", function()
     [ [["\r\n\t\\\""]]    ] = '\r\n\t\\"',
     [ [["\\"]]            ] = '\\',
     [ [["\\\\"]]          ] = '\\\\',
+    [ [["\/"]]            ] = '/',
   }
   for k, v in pairs(t) do
     local res = json.decode(k)

@@ -25,7 +25,7 @@ local escape_char_map = {
   [ "\t" ] = "\\t",
 }
 
-local escape_char_map_inv = {}
+local escape_char_map_inv = { [ "\\/" ] = "/" }
 for k, v in pairs(escape_char_map) do
   escape_char_map_inv[v] = k
 end
