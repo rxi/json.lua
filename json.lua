@@ -370,6 +370,9 @@ end
 
 
 function json.decode(str)
+  if type(str) ~= "string" then
+    error("expected argument of type string, got " .. type(str))
+  end
   return ( parse(str, next_char(str, 1, space_chars, true)) )
 end
 
