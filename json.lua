@@ -7,7 +7,7 @@
 -- under the terms of the MIT license. See LICENSE for details.
 --
 
-local json = { _version = "0.0.0" }
+local json = { _version = "0.1.0" }
 
 -------------------------------------------------------------------------------
 -- Encode
