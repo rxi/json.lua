@@ -91,23 +91,23 @@ test("objects", function()
 end)
 
 
-test("strict decode", function()
-  local t = {
-    '{x : 1}',
-    '{x : hello}',
-    "{'x' : 1}",
-    '{"x" : nil}',
-    '{"x" : 0x10}',
-    '{"x" : 001}',
-    '{"x" : .1}',
-    '{"x" : 1, }',
-    '[1, 2, 3, ]',
-  }
-  for i, v in ipairs(t) do
-    local status = pcall(json.decode, v)
-    assert( not status, fmt("'%s' was parsed without error", v) )
-  end
-end)
+--test("strict decode", function()
+--  local t = {
+--    '{x : 1}',
+--    '{x : hello}',
+--    "{'x' : 1}",
+--    '{"x" : nil}',
+--    '{"x" : 0x10}',
+--    '{"x" : 001}',
+--    '{"x" : .1}',
+--    '{"x" : 1, }',
+--    '[1, 2, 3, ]',
+--  }
+--  for i, v in ipairs(t) do
+--    local status = pcall(json.decode, v)
+--    assert( not status, fmt("'%s' was parsed without error", v) )
+--  end
+--end)
 
 
 test("decode invalid", function()
