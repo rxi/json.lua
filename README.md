@@ -36,6 +36,7 @@ json.decode('[1,2,3,{"x":10}]') -- Returns { 1, 2, 3, { x = 10 } }
   or invalid numbers (NaN, -inf, inf) will raise an error
 * `null` values contained within an array or object are converted to `nil` and
   are therefore lost upon decoding
+* Alternatively `null` values may be encoded using `json.null` instead of `nil`
 * *Pretty* encoding is not supported, `json.encode()` only encodes to a compact
   format
 

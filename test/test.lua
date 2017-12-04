@@ -235,4 +235,11 @@ test("encode escape", function()
   end
 end)
 
+test("encode null", function()
+    assert( json.encode{foo=json.null} == [[{"foo":null}]],
+            "json.null was not preserved" )
+
+    assert( json.encode({foo=nil}) == "[]",
+            "nil was not lost" )
+end)
 
