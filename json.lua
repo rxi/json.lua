@@ -10,6 +10,15 @@
 local json = { _version = "0.1.0" }
 
 -------------------------------------------------------------------------------
+-- Null encoding support
+-------------------------------------------------------------------------------
+local _null_type = "null"
+local _null_mt = {
+    __index={ __type = _null_type }
+}
+json.null = setmetatable({}, _null_mt)
+
+-------------------------------------------------------------------------------
 -- Encode
 -------------------------------------------------------------------------------
 
@@ -42,6 +51,10 @@ end
 
 
 local function encode_table(val, stack)
+  if val.__type == _null_type then
+      return encode_nil(val)
+  end
+
   local res = {}
   stack = stack or {}
 
@@ -375,6 +388,5 @@ function json.decode(str)
   end
   return ( parse(str, next_char(str, 1, space_chars, true)) )
 end
-
 
 return json
