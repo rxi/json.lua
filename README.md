@@ -21,13 +21,13 @@ The library provides the following functions:
 #### json.encode(value)
 Returns a string representing `value` encoded in JSON.
 ```lua
-json.encode({ 1, 2, 3, { x = 10 } }) -- Returns '[1,2,3,{"x":10}]'
+json:encode({ 1, 2, 3, { x = 10 } }) -- Returns '[1,2,3,{"x":10}]'
 ```
 
 #### json.decode(str)
 Returns a value representing the decoded JSON string.
 ```lua
-json.decode('[1,2,3,{"x":10}]') -- Returns { 1, 2, 3, { x = 10 } }
+json:decode('[1,2,3,{"x":10}]') -- Returns { 1, 2, 3, { x = 10 } }
 ```
 
 ## Notes
