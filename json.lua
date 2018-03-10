@@ -1,10 +1,25 @@
 --
 -- json.lua
 --
--- Copyright (c) 2015 rxi
+-- Copyright (c) 2018 rxi
 --
--- This library is free software; you can redistribute it and/or modify it
--- under the terms of the MIT license. See LICENSE for details.
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of
+-- this software and associated documentation files (the "Software"), to deal in
+-- the Software without restriction, including without limitation the rights to
+-- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+-- of the Software, and to permit persons to whom the Software is furnished to do
+-- so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in all
+-- copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.
 --
 
 local json = { _version = "0.1.0" }
@@ -38,7 +53,7 @@ end
 
 local function encode_nil(val)
   return "null"
-end 
+end
 
 
 local function encode_table(val, stack)
@@ -127,7 +142,7 @@ end
 
 local parse
 
-local function create_set(...) 
+local function create_set(...)
   local res = {}
   for i = 1, select("#", ...) do
     res[ select(i, ...) ] = true
@@ -234,17 +249,17 @@ local function parse_string(str, i)
 
     elseif x == 34 then -- '"' (end of string)
       local s = str:sub(i + 1, j - 1)
-      if has_surrogate_escape then 
+      if has_surrogate_escape then
         s = s:gsub("\\u[dD][89aAbB]..\\u....", parse_unicode_escape)
       end
-      if has_unicode_escape then 
+      if has_unicode_escape then
         s = s:gsub("\\u....", parse_unicode_escape)
       end
       if has_escape then
         s = s:gsub("\\.", escape_char_map_inv)
       end
       return s, j + 1
-    
+
     else
       last = x
     end
@@ -282,7 +297,7 @@ local function parse_array(str, i)
     local x
     i = next_char(str, i, space_chars, true)
     -- Empty / end of array?
-    if str:sub(i, i) == "]" then 
+    if str:sub(i, i) == "]" then
       i = i + 1
       break
     end
@@ -290,7 +305,7 @@ local function parse_array(str, i)
     x, i = parse(str, i)
     res[n] = x
     n = n + 1
-    -- Next token 
+    -- Next token
     i = next_char(str, i, space_chars, true)
     local chr = str:sub(i, i)
     i = i + 1
@@ -308,7 +323,7 @@ local function parse_object(str, i)
     local key, val
     i = next_char(str, i, space_chars, true)
     -- Empty / end of object?
-    if str:sub(i, i) == "}" then 
+    if str:sub(i, i) == "}" then
       i = i + 1
       break
     end
