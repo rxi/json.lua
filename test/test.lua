@@ -57,7 +57,7 @@ end)
 
 test("literals", function()
   assert( json.decode("true") == true )
-  assert( json.encode(true) == "true" ) 
+  assert( json.encode(true) == "true" )
   assert( json.decode("false") == false )
   assert( json.encode(false) == "false" )
   assert( json.decode("null") == nil )
@@ -125,6 +125,8 @@ test("decode invalid", function()
     '{]',
     '[}',
     '"a',
+    '10 xx',
+    '{}123'
   }
   for i, v in ipairs(t) do
     local status = pcall(json.decode, v)
@@ -234,5 +236,3 @@ test("encode escape", function()
     assert( res == v, fmt("'%s' was not escaped properly", k) )
   end
 end)
-
-

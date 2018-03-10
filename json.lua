@@ -388,7 +388,12 @@ function json.decode(str)
   if type(str) ~= "string" then
     error("expected argument of type string, got " .. type(str))
   end
-  return ( parse(str, next_char(str, 1, space_chars, true)) )
+  local res, idx = parse(str, next_char(str, 1, space_chars, true))
+  idx = next_char(str, idx, space_chars, true)
+  if idx <= #str then
+    decode_error(str, idx, "trailing garbage")
+  end
+  return res
 end
 
 
