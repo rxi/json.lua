@@ -65,7 +65,7 @@ local function encode_table(val, stack)
 
   stack[val] = true
 
-  if val[1] ~= nil or next(val) == nil then
+  if rawget(val[1]) ~= nil or next(val) == nil then
     -- Treat as array -- check keys are valid and it is not sparse
     local n = 0
     for k in pairs(val) do
