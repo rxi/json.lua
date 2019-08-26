@@ -154,7 +154,7 @@ local space_chars   = create_set(" ", "\t", "\r", "\n")
 local delim_chars   = create_set(" ", "\t", "\r", "\n", "]", "}", ",")
 local escape_chars  = create_set("\\", "/", '"', "b", "f", "n", "r", "t", "u")
 local literals      = create_set("true", "false", "null")
-local locale_character = (string.match(tostring(tonumber(1.1)),'%p')) -- return the locale punctuation character according to the locale
+local locale_character = (string.match(tostring(1/2),'%p')) -- return point decimal or comma decimal according to the locale
 
 
 local literal_map = {
@@ -273,15 +273,13 @@ end
 local function parse_number(str, i)
   local x = next_char(str, i, delim_chars)
   local s = str:sub(i, x - 1)
-  s = s:gsub('%p',locale_character) -- replace the locale punctuation character in the string with the correct one
+  s = s:gsub('[%.%,]',locale_character) -- replace the comma decimal or point decimal with the correct one according to the locale
   local n = tonumber(s)
   if not n then
     decode_error(str, i, "invalid number '" .. s .. "'")
   end
   return n, x
 end
-
-
 local function parse_literal(str, i)
   local x = next_char(str, i, delim_chars)
   local word = str:sub(i, x - 1)
