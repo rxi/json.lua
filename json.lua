@@ -216,52 +216,43 @@ end
 
 
 local function parse_string(str, i)
-  local has_unicode_escape = false
-  local has_surrogate_escape = false
-  local has_escape = false
-  local last
-  for j = i + 1, #str do
+  local s = ""
+  local j = i + 1
+  while j <= #str do
     local x = str:byte(j)
 
     if x < 32 then
       decode_error(str, j, "control character in string")
     end
 
-    if last == 92 then -- "\\" (escape char)
-      if x == 117 then -- "u" (unicode escape sequence)
-        local hex = str:sub(j + 1, j + 5)
+    if x == 92 then -- "\\" (escape char)
+      if str:byte(j + 1) == 117 then -- "u" (unicode escape sequence)
+        local hex = str:sub(j + 2, j + 6)
         if not hex:find("%x%x%x%x") then
           decode_error(str, j, "invalid unicode escape in string")
         end
         if hex:find("^[dD][89aAbB]") then
-          has_surrogate_escape = true
+          s = s .. parse_unicode_escape(str:sub(j, j + 12))
+          j = j + 12
         else
-          has_unicode_escape = true
+          s = s .. parse_unicode_escape(str:sub(j, j + 6))
+          j = j + 6
         end
       else
-        local c = string.char(x)
+        local c = str:sub(j + 1, j + 1)
         if not escape_chars[c] then
           decode_error(str, j, "invalid escape char '" .. c .. "' in string")
         end
-        has_escape = true
+        s = s .. escape_char_map_inv[str:sub(j, j + 1)]
+        j = j + 2
       end
-      last = nil
 
     elseif x == 34 then -- '"' (end of string)
-      local s = str:sub(i + 1, j - 1)
-      if has_surrogate_escape then
-        s = s:gsub("\\u[dD][89aAbB]..\\u....", parse_unicode_escape)
-      end
-      if has_unicode_escape then
-        s = s:gsub("\\u....", parse_unicode_escape)
-      end
-      if has_escape then
-        s = s:gsub("\\.", escape_char_map_inv)
-      end
       return s, j + 1
 
     else
-      last = x
+      s = s .. string.char(x)
+      j = j + 1
     end
   end
   decode_error(str, i, "expected closing quote for string")
