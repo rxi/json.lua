@@ -216,10 +216,18 @@ end
 
 
 local function parse_string(str, i)
-  local s = ""
+  local s = {}
   local j = i + 1
   while j <= #str do
     local x = str:byte(j)
+
+    local k = j
+    while not (x < 32 or x == 92 or x == 34) do
+        j = j + 1
+	x = str:byte(j)
+    end
+
+    table.insert(s, str:sub(k, j - 1))
 
     if x < 32 then
       decode_error(str, j, "control character in string")
@@ -235,10 +243,10 @@ local function parse_string(str, i)
           if not str:sub(j + 8, j + 12):find("%x%x%x%x") then
             decode_error(str, j + 6, "invalid unicode continue sequence in string")
           end
-          s = s .. parse_unicode_escape(str:sub(j, j + 12))
+          table.insert(s, parse_unicode_escape(str:sub(j, j + 12)))
           j = j + 12
         else
-          s = s .. parse_unicode_escape(str:sub(j, j + 6))
+          table.insert(s, parse_unicode_escape(str:sub(j, j + 6)))
           j = j + 6
         end
       else
@@ -246,16 +254,12 @@ local function parse_string(str, i)
         if not escape_chars[c] then
           decode_error(str, j, "invalid escape char '" .. c .. "' in string")
         end
-        s = s .. escape_char_map_inv[str:sub(j, j + 1)]
+        table.insert(s, escape_char_map_inv[str:sub(j, j + 1)])
         j = j + 2
       end
 
     elseif x == 34 then -- '"' (end of string)
-      return s, j + 1
-
-    else
-      s = s .. string.char(x)
-      j = j + 1
+      return table.concat(s), j + 1
     end
   end
   decode_error(str, i, "expected closing quote for string")
