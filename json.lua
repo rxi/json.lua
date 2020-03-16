@@ -232,6 +232,9 @@ local function parse_string(str, i)
           decode_error(str, j, "invalid unicode escape in string")
         end
         if hex:find("^[dD][89aAbB]") then
+          if not str:sub(j + 8, j + 12):find("%x%x%x%x") then
+            decode_error(str, j + 6, "invalid unicode continue sequence in string")
+          end
           s = s .. parse_unicode_escape(str:sub(j, j + 12))
           j = j + 12
         else
