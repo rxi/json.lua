@@ -219,15 +219,13 @@ local function parse_string(str, i)
   local s = {}
   local j = i + 1
   while j <= #str do
-    local x = str:byte(j)
 
-    local k = j
-    while not (x < 32 or x == 92 or x == 34) do
-        j = j + 1
-	x = str:byte(j)
+    local k, l = str:find("^[^%c\\\"]+", j)
+    if k then
+      table.insert(s, str:sub(k, l))
+      j = l + 1
     end
-
-    table.insert(s, str:sub(k, j - 1))
+    local x = str:byte(j)
 
     if x < 32 then
       decode_error(str, j, "control character in string")
