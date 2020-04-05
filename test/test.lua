@@ -159,6 +159,7 @@ test("decode escape", function()
     [ [["\\"]]            ] = '\\',
     [ [["\\\\"]]          ] = '\\\\',
     [ [["\/"]]            ] = '/',
+    [ [["\\u \u263a"]]  ] = [[\u ☺]],
   }
   for k, v in pairs(t) do
     local res = json.decode(k)
