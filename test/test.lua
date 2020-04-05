@@ -66,9 +66,15 @@ end)
 
 
 test("strings", function()
+  local s = ""
+  assert( s == json.decode( json.encode(s) ) )
+  local s = "\\"
+  assert( s == json.decode( json.encode(s) ) )
   local s = "Hello world"
   assert( s == json.decode( json.encode(s) ) )
   local s = "\0 \13 \27"
+  assert( s == json.decode( json.encode(s) ) )
+  local s = "\0\r\n\8"
   assert( s == json.decode( json.encode(s) ) )
 end)
 
