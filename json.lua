@@ -22,7 +22,44 @@
 -- SOFTWARE.
 --
 
-local json = { _version = "0.1.2" }
+local json
+
+do
+  -- Semantic version. all lowercase.
+  -- Suffix can be alpha1, alpha2, beta1, beta2, rc1, rc2, etc.
+  -- NOTE: Two version numbers need to be modified.
+  -- 1. _version
+  -- 2. _minor
+
+  -- version to store the official version of json.lua
+  local _version = "0.1.2"
+
+  -- When major is changed, it should be changed to json2
+  local _major = "json"
+
+  -- Update this whenever a new version, for LibStub version registration.
+  local _minor = 1
+
+  -- Register in the World of Warcraft library "LibStub" if detected.
+  if LibStub then
+    local lib, minor = LibStub:GetLibrary(_major, true)
+    if lib and minor and minor >= _minor then -- No need to update.
+      return lib
+    else -- Update or first time register
+      json = LibStub:NewLibrary(_major, _minor)
+      -- NOTE: It is important that new version has implemented
+      -- all exported APIs and tables in the old version,
+      -- so the old library is fully garbage collected,
+      -- and we 100% ensure the backward compatibility.
+    end
+  else -- "LibStub" is not detected.
+    json = {}
+  end
+
+  json._version = _version
+  json._major = _major
+  json._minor = _minor
+end
 
 -------------------------------------------------------------------------------
 -- Encode
