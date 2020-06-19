@@ -46,19 +46,33 @@ for k, v in pairs(escape_char_map) do
 end
 
 
+local function make_indent(state)
+  return string.rep(" ", state.currentIndentLevel * state.opts.indent)
+end
+
+
 local function escape_char(c)
   return "\\" .. (escape_char_map[c] or string.format("u%04x", c:byte()))
 end
 
 
-local function encode_nil(val)
+local function encode_nil()
   return "null"
 end
 
 
-local function encode_table(val, stack)
+local function encode_table(val, state)
   local res = {}
-  stack = stack or {}
+  local stack = state.stack
+  local pretty = state.opts.indent > 0
+
+  local close_indent = make_indent(state)
+  local comma = pretty and ",\n" or ","
+  local colon = pretty and ": " or ":"
+  local open_brace = pretty and "{\n" or "{"
+  local close_brace = pretty and ("\n" .. close_indent .. "}") or "}"
+  local open_bracket = pretty and "[\n" or "["
+  local close_bracket = pretty and ("\n" .. close_indent .. "]") or "]"
 
   -- Circular reference?
   if stack[val] then error("circular reference") end
@@ -78,11 +92,13 @@ local function encode_table(val, stack)
       error("invalid table: sparse array")
     end
     -- Encode
-    for i, v in ipairs(val) do
-      table.insert(res, encode(v, stack))
+    for _, v in ipairs(val) do
+      state.currentIndentLevel = state.currentIndentLevel + 1
+      table.insert(res, make_indent(state) .. encode(v, state))
+      state.currentIndentLevel = state.currentIndentLevel - 1
     end
     stack[val] = nil
-    return "[" .. table.concat(res, ",") .. "]"
+    return open_bracket .. table.concat(res, comma) .. close_bracket
 
   else
     -- Treat as an object
@@ -90,10 +106,12 @@ local function encode_table(val, stack)
       if type(k) ~= "string" then
         error("invalid table: mixed or invalid key types")
       end
-      table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+      state.currentIndentLevel = state.currentIndentLevel + 1
+      table.insert(res, make_indent(state) .. encode(k, state) .. colon .. encode(v, state))
+      state.currentIndentLevel = state.currentIndentLevel - 1
     end
     stack[val] = nil
-    return "{" .. table.concat(res, ",") .. "}"
+    return open_brace .. table.concat(res, comma) .. close_brace
   end
 end
 
@@ -121,18 +139,30 @@ local type_func_map = {
 }
 
 
-encode = function(val, stack)
+encode = function(val, state)
   local t = type(val)
   local f = type_func_map[t]
   if f then
-    return f(val, stack)
+    return f(val, state)
   end
   error("unexpected type '" .. t .. "'")
 end
 
 
-function json.encode(val)
-  return ( encode(val) )
+local function add_default_opts(opts)
+  opts = opts or {}
+  opts.indent = opts.indent or 0
+  return opts
+end
+
+
+function json.encode(val, opts)
+  local state = {
+    opts = add_default_opts(opts),
+    currentIndentLevel = 0,
+    stack = {}
+  }
+  return encode(val, state)
 end
 
 
