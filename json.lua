@@ -67,18 +67,25 @@ local function encode_table(val, stack)
   -- Check whether to treat as a array or object
   local array = true
   local length = 0
-  for k in pairs(val) do
-	if type(k) ~= "number" or k<=0 then
-		array = nil
-		break	-- Treat as object
-	else
-		if k > length then 
-			length = k
+	local nLen
+  for k,v in pairs(val) do
+		if (type(k) ~= "number" or k<=0) and not (k == "n" and type(v) == "number") then
+			array = nil
+			break	-- Treat as object
+		else
+			if k > length then 
+				length = k
+			end
+			if k == "n" and type(v) == "number" then
+				nLen = v
+			end
 		end
-	end
   end
 
   if array then
+		if nLen > length then
+			length = nLen
+		end
     -- Encode
     for i=1,length do
       table.insert(res, encode(val[i], stack))
