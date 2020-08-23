@@ -67,7 +67,7 @@ local function encode_table(val, stack)
   -- Check whether to treat as a array or object
   local array = true
   local length = 0
-	local nLen
+	local nLen = 0
   for k,v in pairs(val) do
 		if (type(k) ~= "number" or k<=0) and not (k == "n" and type(v) == "number") then
 			array = nil
