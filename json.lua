@@ -1,28 +1,4 @@
---
--- json.lua
---
--- Copyright (c) 2020 rxi
---
--- Permission is hereby granted, free of charge, to any person obtaining a copy of
--- this software and associated documentation files (the "Software"), to deal in
--- the Software without restriction, including without limitation the rights to
--- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
--- of the Software, and to permit persons to whom the Software is furnished to do
--- so, subject to the following conditions:
---
--- The above copyright notice and this permission notice shall be included in all
--- copies or substantial portions of the Software.
---
--- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
--- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
--- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
--- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
--- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
--- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
--- SOFTWARE.
---
-
-local json = { _version = "0.1.2" }
+local json = { _version = "0.1.3" }
 
 -------------------------------------------------------------------------------
 -- Encode
@@ -64,22 +40,31 @@ local function encode_table(val, stack)
   if stack[val] then error("circular reference") end
 
   stack[val] = true
+  -- Check whether to treat as a array or object
+  local array = true
+  local length = 0
+	local nLen = 0
+  for k,v in pairs(val) do
+		if (type(k) ~= "number" or k<=0) and not (k == "n" and type(v) == "number") then
+			array = nil
+			break	-- Treat as object
+		else
+			if k > length then 
+				length = k
+			end
+			if k == "n" and type(v) == "number" then
+				nLen = v
+			end
+		end
+  end
 
-  if rawget(val, 1) ~= nil or next(val) == nil then
-    -- Treat as array -- check keys are valid and it is not sparse
-    local n = 0
-    for k in pairs(val) do
-      if type(k) ~= "number" then
-        error("invalid table: mixed or invalid key types")
-      end
-      n = n + 1
-    end
-    if n ~= #val then
-      error("invalid table: sparse array")
-    end
+  if array then
+		if nLen > length then
+			length = nLen
+		end
     -- Encode
-    for i, v in ipairs(val) do
-      table.insert(res, encode(v, stack))
+    for i = 1, length do
+      table.insert(res, encode(val[i], stack))
     end
     stack[val] = nil
     return "[" .. table.concat(res, ",") .. "]"
@@ -87,9 +72,11 @@ local function encode_table(val, stack)
   else
     -- Treat as an object
     for k, v in pairs(val) do
+	--[[
       if type(k) ~= "string" then
         error("invalid table: mixed or invalid key types")
       end
+	  ]]
       table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
     end
     stack[val] = nil
@@ -108,7 +95,7 @@ local function encode_number(val)
   if val ~= val or val <= -math.huge or val >= math.huge then
     error("unexpected number value '" .. tostring(val) .. "'")
   end
-  return string.format("%.14g", val)
+  return tostring(val)
 end
 
 
@@ -216,7 +203,7 @@ end
 
 
 local function parse_string(str, i)
-  local res = ""
+  local res = {}
   local j = i + 1
   local k = j
 
@@ -227,26 +214,26 @@ local function parse_string(str, i)
       decode_error(str, j, "control character in string")
 
     elseif x == 92 then -- `\`: Escape
-      res = res .. str:sub(k, j - 1)
+      table.insert(res, str:sub(k, j - 1))
       j = j + 1
       local c = str:sub(j, j)
       if c == "u" then
         local hex = str:match("^[dD][89aAbB]%x%x\\u%x%x%x%x", j + 1)
                  or str:match("^%x%x%x%x", j + 1)
                  or decode_error(str, j - 1, "invalid unicode escape in string")
-        res = res .. parse_unicode_escape(hex)
+        table.insert(res, parse_unicode_escape(hex))
         j = j + #hex
       else
         if not escape_chars[c] then
           decode_error(str, j - 1, "invalid escape char '" .. c .. "' in string")
         end
-        res = res .. escape_char_map_inv[c]
+        table.insert(res, escape_char_map_inv[c])
       end
       k = j + 1
 
     elseif x == 34 then -- `"`: End of string
-      res = res .. str:sub(k, j - 1)
-      return res, j + 1
+		table.insert(res, str:sub(k, j - 1))
+		return table.concat(res), j + 1
     end
 
     j = j + 1
@@ -384,5 +371,4 @@ function json.decode(str)
   return res
 end
 
-
-return json
+return json;
