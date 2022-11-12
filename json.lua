@@ -87,10 +87,13 @@ local function encode_table(val, stack)
   else
     -- Treat as an object
     for k, v in pairs(val) do
-      if type(k) ~= "string" then
-        error("invalid table: mixed or invalid key types")
+      if type(k) == "string" then
+        table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+      elseif type(k) == "number" then
+        table.insert(res, encode(string.format(k), stack) .. ":" .. encode(v, stack))
+      else
+        error("invalid table: mixed or invalid key types");
       end
-      table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
     end
     stack[val] = nil
     return "{" .. table.concat(res, ",") .. "}"
