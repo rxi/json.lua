@@ -90,20 +90,22 @@ local function encode_table(val, stack)
       end
       -- Encode
       for i=1,length do
-        table.insert(res, encode(val[i], stack))
+        res[#res + 1] = encode(val[i], stack)
       end
       stack[val] = nil
       return "[" .. table.concat(res, ",") .. "]"
     else
       -- Treat as an object
       for k, v in pairs(val) do
-          --[[
-        if type(k) ~= "string" then
-          error("invalid table: mixed or invalid key types")
+        if type(k) == "string" then
+          res[#res + 1] = encode(k, stack) .. ":" .. encode(v, stack)
+        elseif type(k) == "number" then
+          res[#res + 1] = encode(string.format(k), stack) .. ":" .. encode(v, stack)
+        else
+          error("invalid table: mixed or invalid key types");
         end
-	    ]]
         if k ~= "_" then
-          table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+          res[#res + 1] = encode(k, stack) .. ":" .. encode(v, stack)
         end
       end
       stack[val] = nil
