@@ -55,6 +55,7 @@ local function encode_nil(val)
   return "null"
 end
 
+local json_object_tag = {}
 
 local function encode_table(val, stack)
   local res = {}
@@ -64,47 +65,50 @@ local function encode_table(val, stack)
   if stack[val] then error("circular reference") end
 
   stack[val] = true
-  -- Check whether to treat as a array or object
-  local array = true
-  local length = 0
-	local nLen = 0
-  for k,v in pairs(val) do
-		if (type(k) ~= "number" or k<=0) and not (k == "n" and type(v) == "number") then
-			array = nil
-			break	-- Treat as object
-		else
-			if k > length then 
-				length = k
-			end
-			if k == "n" and type(v) == "number" then
-				nLen = v
-			end
-		end
-  end
 
-  if array then
-		if nLen > length then
-			length = nLen
-		end
-    -- Encode
-    for i=1,length do
-      table.insert(res, encode(val[i], stack))
-    end
-    stack[val] = nil
-    return "[" .. table.concat(res, ",") .. "]"
-
-  else
-    -- Treat as an object
-    for k, v in pairs(val) do
-	--[[
-      if type(k) ~= "string" then
-        error("invalid table: mixed or invalid key types")
+  if getmetatable(val) ~= json_object_tag and (rawget(val, 1) ~= nil or next(val) == nil) then
+    -- Check whether to treat as a array or object
+    local array = true
+    local length = 0
+    local nLen = 0
+    for k,v in pairs(val) do
+      if (type(k) ~= "number" or k<=0) and not (k == "n" and type(v) == "number") then
+        array = nil
+        break	-- Treat as object
+      else
+        if k > length then 
+          length = k
+        end
+        if k == "n" and type(v) == "number" then
+          nLen = v
+        end
       end
-	  ]]
-      table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
     end
-    stack[val] = nil
-    return "{" .. table.concat(res, ",") .. "}"
+    if array then
+      if nLen > length then
+        length = nLen
+      end
+      -- Encode
+      for i=1,length do
+        table.insert(res, encode(val[i], stack))
+      end
+      stack[val] = nil
+      return "[" .. table.concat(res, ",") .. "]"
+    else
+      -- Treat as an object
+      for k, v in pairs(val) do
+          --[[
+        if type(k) ~= "string" then
+          error("invalid table: mixed or invalid key types")
+        end
+	    ]]
+        if k ~= "_" then
+          table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+        end
+      end
+      stack[val] = nil
+      return "{" .. table.concat(res, ",") .. "}"
+    end
   end
 end
 
