@@ -2,6 +2,7 @@
 -- json.lua
 --
 -- Copyright (c) 2020 rxi
+-- Copyright (c) 2020 alexandro-rezakhani
 --
 -- Permission is hereby granted, free of charge, to any person obtaining a copy of
 -- this software and associated documentation files (the "Software"), to deal in
@@ -55,7 +56,6 @@ local function encode_nil(val)
   return "null"
 end
 
-local json_object_tag = {}
 
 local function encode_table(val, stack)
   local res = {}
@@ -65,52 +65,47 @@ local function encode_table(val, stack)
   if stack[val] then error("circular reference") end
 
   stack[val] = true
+  -- Check whether to treat as a array or object
+  local array = true
+  local length = 0
+	local nLen = 0
+  for k,v in pairs(val) do
+		if (type(k) ~= "number" or k<=0) and not (k == "n" and type(v) == "number") then
+			array = nil
+			break	-- Treat as object
+		else
+			if k > length then 
+				length = k
+			end
+			if k == "n" and type(v) == "number" then
+				nLen = v
+			end
+		end
+  end
+  if array then
+		if nLen > length then
+			length = nLen
+		end
+    -- Encode
+    for i=1,length do
+      table.insert(res, encode(val[i], stack))
+    end
+    stack[val] = nil
+    return "[" .. table.concat(res, ",") .. "]"
 
-  if getmetatable(val) ~= json_object_tag and (rawget(val, 1) ~= nil or next(val) == nil) then
-    -- Check whether to treat as a array or object
-    local array = true
-    local length = 0
-    local nLen = 0
-    for k,v in pairs(val) do
-      if (type(k) ~= "number" or k<=0) and not (k == "n" and type(v) == "number") then
-        array = nil
-        break	-- Treat as object
+  else
+    -- Treat as an object
+    for k, v in pairs(val) do
+      if type(k) == "string" then
+        res[#res + 1] = encode(k, stack) .. ":" .. encode(v, stack)
+      elseif type(k) == "number" then
+        res[#res + 1] = encode(string.format(k), stack) .. ":" .. encode(v, stack)
       else
-        if k > length then 
-          length = k
-        end
-        if k == "n" and type(v) == "number" then
-          nLen = v
-        end
+        error("invalid table: mixed or invalid key types");
       end
     end
-    if array then
-      if nLen > length then
-        length = nLen
-      end
-      -- Encode
-      for i=1,length do
-        res[#res + 1] = encode(val[i], stack)
-      end
-      stack[val] = nil
-      return "[" .. table.concat(res, ",") .. "]"
-    else
-      -- Treat as an object
-      for k, v in pairs(val) do
-        if type(k) == "string" then
-          res[#res + 1] = encode(k, stack) .. ":" .. encode(v, stack)
-        elseif type(k) == "number" then
-          res[#res + 1] = encode(string.format(k), stack) .. ":" .. encode(v, stack)
-        else
-          error("invalid table: mixed or invalid key types");
-        end
-        if k ~= "_" then
-          res[#res + 1] = encode(k, stack) .. ":" .. encode(v, stack)
-        end
-      end
-      stack[val] = nil
-      return "{" .. table.concat(res, ",") .. "}"
-    end
+    stack[val] = nil
+    return "{" .. table.concat(res, ",") .. "}"
   end
 end
 
@@ -176,8 +171,6 @@ local space_chars   = create_set(" ", "\t", "\r", "\n")
 local delim_chars   = create_set(" ", "\t", "\r", "\n", "]", "}", ",")
 local escape_chars  = create_set("\\", "/", '"', "b", "f", "n", "r", "t", "u")
 local literals      = create_set("true", "false", "null")
-local locale_character = (string.match(tostring(1/2),'%p')) -- return point decimal or comma decimal according to the locale
-
 
 local literal_map = {
   [ "true"  ] = true,
@@ -240,7 +233,7 @@ end
 
 
 local function parse_string(str, i)
-  local res = {}
+  local res = ""
   local j = i + 1
   local k = j
 
@@ -251,25 +244,25 @@ local function parse_string(str, i)
       decode_error(str, j, "control character in string")
 
     elseif x == 92 then -- `\`: Escape
-      res[#res + 1] = str:sub(k, j - 1)
+      res = res .. str:sub(k, j - 1)
       j = j + 1
       local c = str:sub(j, j)
       if c == "u" then
         local hex = str:match("^[dD][89aAbB]%x%x\\u%x%x%x%x", j + 1)
                  or str:match("^%x%x%x%x", j + 1)
                  or decode_error(str, j - 1, "invalid unicode escape in string")
-        res[#res + 1] = parse_unicode_escape(hex)
+        res = res .. parse_unicode_escape(hex)
         j = j + #hex
       else
         if not escape_chars[c] then
           decode_error(str, j - 1, "invalid escape char '" .. c .. "' in string")
         end
-        res[#res + 1] = escape_char_map_inv[c]
+        res = res .. escape_char_map_inv[c]
       end
       k = j + 1
 
     elseif x == 34 then -- `"`: End of string
-      res[#res + 1] = str:sub(k, j - 1)
+      res = res .. str:sub(k, j - 1)
       return res, j + 1
     end
 
@@ -283,13 +276,14 @@ end
 local function parse_number(str, i)
   local x = next_char(str, i, delim_chars)
   local s = str:sub(i, x - 1)
-  s = s:gsub('[%.%,]',locale_character) -- replace the comma decimal or point decimal with the correct one according to the locale
   local n = tonumber(s)
   if not n then
     decode_error(str, i, "invalid number '" .. s .. "'")
   end
   return n, x
 end
+
+
 local function parse_literal(str, i)
   local x = next_char(str, i, delim_chars)
   local word = str:sub(i, x - 1)
