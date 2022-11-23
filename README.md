@@ -3,7 +3,7 @@ A lightweight JSON library for Lua
 
 
 ## Features
-* Implemented in pure Lua: works with 5.1, 5.2, 5.3 and JIT
+* Implemented in pure Lua: works with 5.1, 5.2, 5.3, 5.4 and JIT
 * Fast: generally outperforms other pure Lua JSON implementations
   ([benchmark scripts](bench/))
 * Tiny: around 280sloc, 9kb
