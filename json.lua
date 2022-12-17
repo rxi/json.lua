@@ -51,20 +51,16 @@ local function escape_char(c)
 end
 
 
-local function encode_nil(val)
-  return "null"
+local function encode_nil(rope)
+  rope[#rope + 1] = "null"
 end
 
 
-local function encode_table(val, stack)
-  local res = {}
-  stack = stack or {}
-
+local function encode_table(rope, val, stack)
   -- Circular reference?
   if stack[val] then error("circular reference") end
 
   stack[val] = true
-
   if rawget(val, 1) ~= nil or next(val) == nil then
     -- Treat as array -- check keys are valid and it is not sparse
     local n = 0
@@ -78,61 +74,80 @@ local function encode_table(val, stack)
       error("invalid table: sparse array")
     end
     -- Encode
+    rope[#rope + 1] = "["
     for i, v in ipairs(val) do
-      table.insert(res, encode(v, stack))
+      if i > 1 then
+        rope[#rope + 1] = ","
+      end
+      encode(rope, v, stack)
     end
-    stack[val] = nil
-    return "[" .. table.concat(res, ",") .. "]"
-
+    rope[#rope + 1] = "]"
   else
     -- Treat as an object
+    rope[#rope + 1] = "{"
+    local first = true
     for k, v in pairs(val) do
       if type(k) ~= "string" then
         error("invalid table: mixed or invalid key types")
       end
-      table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+      if not first then
+        rope[#rope + 1] = ","
+      end
+      encode(rope, k, stack)
+      rope[#rope + 1] = ":"
+      encode(rope, v, stack)
+      first = false
     end
-    stack[val] = nil
-    return "{" .. table.concat(res, ",") .. "}"
+    rope[#rope + 1] = "}"
   end
+  stack[val] = nil
 end
 
 
-local function encode_string(val)
-  return '"' .. val:gsub('[%z\1-\31\\"]', escape_char) .. '"'
+local function encode_string(rope, val)
+  rope[#rope + 1] = '"'
+  rope[#rope + 1] = val:gsub('[%z\1-\31\\"]', escape_char)
+  rope[#rope + 1] = '"'
 end
 
 
-local function encode_number(val)
+local function encode_number(rope, val)
   -- Check for NaN, -inf and inf
   if val ~= val or val <= -math.huge or val >= math.huge then
     error("unexpected number value '" .. tostring(val) .. "'")
   end
-  return string.format("%.14g", val)
+  -- See www.cs.berkeley.edu/~wkahan/ieee754status/IEEE754.PDF
+  -- 17 digits suffice to losslessly represent 64-bit IEEE754 floats
+  rope[#rope + 1] = ("%.17g"):format(val)
 end
 
+local function encode_boolean(rope, val)
+  rope[#rope + 1] = val and "true" or "false"
+end
 
 local type_func_map = {
   [ "nil"     ] = encode_nil,
   [ "table"   ] = encode_table,
   [ "string"  ] = encode_string,
   [ "number"  ] = encode_number,
-  [ "boolean" ] = tostring,
+  [ "boolean" ] = encode_boolean,
 }
 
 
-encode = function(val, stack)
+function encode(rope, val, stack)
   local t = type(val)
-  local f = type_func_map[t]
-  if f then
-    return f(val, stack)
+  local encoder = type_func_map[t]
+  if encoder then
+    return encoder(rope, val, stack)
   end
   error("unexpected type '" .. t .. "'")
 end
 
 
 function json.encode(val)
-  return ( encode(val) )
+  local rope = {}
+  encode(rope, val, {})
+  return table.concat(rope)
 end
 
 
@@ -216,7 +231,7 @@ end
 
 
 local function parse_string(str, i)
-  local res = ""
+  local res = {}
   local j = i + 1
   local k = j
 
@@ -227,32 +242,33 @@ local function parse_string(str, i)
       decode_error(str, j, "control character in string")
 
     elseif x == 92 then -- `\`: Escape
-      res = res .. str:sub(k, j - 1)
+      res[#res + 1] = str:sub(k, j - 1)
       j = j + 1
       local c = str:sub(j, j)
       if c == "u" then
         local hex = str:match("^[dD][89aAbB]%x%x\\u%x%x%x%x", j + 1)
                  or str:match("^%x%x%x%x", j + 1)
                  or decode_error(str, j - 1, "invalid unicode escape in string")
-        res = res .. parse_unicode_escape(hex)
+        res[#res + 1] = parse_unicode_escape(hex)
         j = j + #hex
       else
         if not escape_chars[c] then
           decode_error(str, j - 1, "invalid escape char '" .. c .. "' in string")
         end
-        res = res .. escape_char_map_inv[c]
+        res[#res + 1] = escape_char_map_inv[c]
       end
       k = j + 1
 
     elseif x == 34 then -- `"`: End of string
-      res = res .. str:sub(k, j - 1)
-      return res, j + 1
+      res[#res + 1] = str:sub(k, j - 1)
+      return table.concat(res), j + 1
     end
 
     j = j + 1
   end
 
   decode_error(str, i, "expected closing quote for string")
+  return table.concat(res)
 end
 
 

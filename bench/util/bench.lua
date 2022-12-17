@@ -5,6 +5,10 @@ local fmt = string.format
 
 
 function bench.run(name, count, func)
+  -- Ensure all garbage is collected
+  for _ = 1, 10 do -- cycles
+    collectgarbage()
+  end
   -- Run bench
   local res = {}
   for i = 1, count do
