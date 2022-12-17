@@ -51,10 +51,10 @@ for i, name in ipairs(libs) do
   end
 
   -- Warmup (for LuaJIT)
-  bench.run(name, 1, function() json.encode(data) end)
+  bench.run(name, 10, function() json.encode(data) end)
 
   -- Run and push results
-  local res = bench.run(name, 10, function() json.encode(data) end)
+  local res = bench.run(name, 100, function() json.encode(data) end)
   table.insert(results, res)
 end
 
