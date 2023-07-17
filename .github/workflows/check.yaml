@@ -1,0 +1,14 @@
+---
+name: "Tests and checks"
+on:
+  pull_request:
+  push:
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    name: Checks
+    steps:
+      - uses: actions/checkout@v3
+      - uses: cachix/install-nix-action@v22
+      - name: Nix checks
+        run: nix flake check -L
