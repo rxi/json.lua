@@ -57,18 +57,19 @@ end
 
 
 local function encode_table(val, stack)
-  local res = {}
-  stack = stack or {}
+	local res = {}
+	stack = stack or {}
 
-  -- Circular reference?
-  if stack[val] then error("circular reference") end
+	-- Circular reference?
+	if stack[val] then error("circular reference") end
 
-  stack[val] = true
-  -- Check whether to treat as a array or object
-  local array = true
-  local length = 0
+	stack[val] = true
+	-- Check whether to treat as a array or object
+	local array = true
+	local length = 0
 	local nLen = 0
-  for k,v in pairs(val) do
+	local count = 0
+	for k,v in pairs(val) do
 		if (type(k) ~= "number" or k<=0) and not (k == "n" and type(v) == "number") then
 			array = nil
 			break	-- Treat as object
@@ -79,33 +80,33 @@ local function encode_table(val, stack)
 			if k == "n" and type(v) == "number" then
 				nLen = v
 			end
+			count = count + 1
 		end
-  end
+	end
 
-  if array then
-		if nLen > length then
-			length = nLen
+	if nLen > length then
+		length = nLen
+	end
+	if array and not (length > 100 and count ~= length) then	-- Check Array detected but sparse > 100 length then treat as object
+		-- Encode
+		for i=1,length do
+			table.insert(res, encode(val[i], stack))
 		end
-    -- Encode
-    for i=1,length do
-      table.insert(res, encode(val[i], stack))
-    end
-    stack[val] = nil
-    return "[" .. table.concat(res, ",") .. "]"
-
-  else
-    -- Treat as an object
-    for k, v in pairs(val) do
-	--[[
-      if type(k) ~= "string" then
-        error("invalid table: mixed or invalid key types")
-      end
-	  ]]
-      table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
-    end
-    stack[val] = nil
-    return "{" .. table.concat(res, ",") .. "}"
-  end
+		stack[val] = nil
+		return "[" .. table.concat(res, ",") .. "]"
+	else
+		-- Treat as an object
+		for k, v in pairs(val) do
+			--[[
+			if type(k) ~= "string" then
+				error("invalid table: mixed or invalid key types")
+			end
+			]]
+			table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+		end
+		stack[val] = nil
+		return "{" .. table.concat(res, ",") .. "}"
+	end
 end
 
 
